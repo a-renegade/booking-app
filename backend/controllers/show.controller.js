@@ -63,7 +63,7 @@ const getShowById = async (req, res) => {
       return res.status(404).json({ message: "Show not found" });
     }
 
-    const selectedSeats = await fetchSelectedSeatsByUser(id, req.body.userID);
+    const selectedSeats = await fetchSelectedSeatsByUser(id, req.user.userID);
     const probabilities= await getCachedSurveyCurve();
     const seatSelectionCount=await fetchSeatSelectionCounts(id);
     
@@ -80,9 +80,23 @@ const getShowById = async (req, res) => {
   }
 };
 
+const getShowsByTheaterId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const shows = await Show.find({ theaterId: id }).populate("movieId", "title");
+    
+    res.status(200).json(shows);
+  } catch (err) {
+    console.error("Error fetching shows:", err.message);
+    res.status(500).json({ message: "Error fetching shows" });
+  }
+};
+
 export {
   createShow,
   getAllShows,
   getShowsByMovie,
   getShowById,
+  getShowsByTheaterId,
 };

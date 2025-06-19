@@ -8,5 +8,4 @@ router.post("/signup", [authMiddleware.signUp], authController.signUp);
 router.post("/signin", [authMiddleware.signIn], authController.signIn);
 router.post("/logout", authController.logout);
 router.get("/check", authController.authCheck);
-
 export default router;

@@ -15,6 +15,11 @@ const theaterSchema = new mongoose.Schema(
         type: Number,
         required: true
       }
+    },
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
     }
   },
   { timestamps: true, versionKey: false }

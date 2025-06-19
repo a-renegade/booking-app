@@ -6,10 +6,11 @@ import { getIO } from "../socket/index.js";
 const createBooking = async (req, res) => {
   try {
     console.log(req.body);
-    const { showId, userID, seats, paymentStatus } = req.body;
+    const { userID }=req.user;
+    const { showId, seats, paymentStatus } = req.body;
 
     const booking = await Booking.create({
-      userReferenceId: req.body.userReferenceId,
+      userReferenceId: req.user.userReferenceId,
       showId,
       seats,
       paymentStatus,

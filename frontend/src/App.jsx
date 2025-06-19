@@ -13,6 +13,11 @@ import { Toaster } from "react-hot-toast";
 import MoviePage from "./pages/MoviePage";
 import ShowPage from "./pages/ShowPage";
 import BookingPage from "./pages/BookingPage";
+import ManageMovie from "./pages/ManageMoviePage";
+import ManageTheaterPage from "./pages/ManageTheaterPage";
+import ManageShowPage from "./pages/ManageShowPage";
+
+
 const App = () => {
   const { authUser , checkAuth ,isCheckingAuth}=useAuthStore();
   useEffect(() => {
@@ -42,6 +47,10 @@ const App = () => {
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login"/>} />
         <Route path="/shows/:movieId" element={<ShowPage />} />
         <Route path="/shows/:showId/book" element={<BookingPage />} />
+        <Route path="/manage/movies" element={<ManageMovie />} />
+        <Route path="/manage/theaters" element={<ManageTheaterPage />} />
+        <Route path="/manage/shows" element={<ManageShowPage />} />
+
       </Routes>
     </div>
     

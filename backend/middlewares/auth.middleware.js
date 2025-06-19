@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 const signUp = async (req, res, next) => {
   console.log("signup API called");
   try {
+    req.user = req.user || {};
     const reqBody = req.body;
     console.log(reqBody);
 
@@ -45,6 +46,7 @@ const signUp = async (req, res, next) => {
 
 const signIn = async (req, res, next) => {
   try {
+    req.user = req.user || {};
     const reqBody = req.body;
 
     if (!reqBody.email && !reqBody.userID) {
@@ -67,9 +69,10 @@ const signIn = async (req, res, next) => {
         return res.status(401).send({ message: "user with provided email does not exist" });
       }
     }
-
-    req.body.userType = user.userType;
-    req.body.userReferenceId = user._id;
+    // console.log(user.userType)
+    req.user.userID = user.userID
+    req.user.userType = user.userType;
+    req.user.userReferenceId = user._id;
 
     next();
   } catch (err) {
@@ -80,6 +83,7 @@ const signIn = async (req, res, next) => {
 
 const authCheck = (req, res, next) => {
   try {
+    req.user = req.user || {};
     const token = req.cookies?.jwt;
 
     if (!token) {
@@ -88,9 +92,9 @@ const authCheck = (req, res, next) => {
 
     const tokenDetails = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.body.userID = tokenDetails.userID;
-    req.body.userType = tokenDetails.userType;
-    req.body.userReferenceId = tokenDetails.userReferenceId;
+    req.user.userID = tokenDetails.userID;
+    req.user.userType = tokenDetails.userType;
+    req.user.userReferenceId = tokenDetails.userReferenceId;
 
     next();
   } catch (err) {

@@ -4,8 +4,8 @@ import { axiosInstance } from "../lib/axios";
 import Seat from "../components/Seat";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-
 const BookingPage = () => {
+  
   const { showId } = useParams();
   const [layout, setLayout] = useState({ rows: 0, columns: 0 });
   const [bookedSeats, setBookedSeats] = useState([]);
@@ -32,7 +32,7 @@ const BookingPage = () => {
     const fetchShow = async () => {
       try {
         const res = await axiosInstance.get(`/show/${showId}`);
-
+        
         // console.log(res.data.probabilities);
         // console.log(res.data.seatSelectionCount);
         

@@ -27,8 +27,8 @@ const signUp = async (req, res) => {
     console.log("user successfully created", ret);
 
     const userData = {
-      userID: reqBody.userID,
-      userType: reqBody.userType,
+      userID: ret.userID,
+      userType: ret.userType,
       userReferenceId: ret._id,
     };
 
@@ -52,9 +52,9 @@ const signInHelper = async (req, res, user) => {
     console.log("Valid user, password matched");
 
     const userData = {
-      userID: reqBody.userID,
-      userType: reqBody.userType,
-      userReferenceId: req.body.userReferenceId,
+      userID: req.user.userID,
+      userType: req.user.userType,
+      userReferenceId: req.user.userReferenceId,
     };
 
     const token = generateToken(userData, res);
@@ -73,7 +73,7 @@ const signIn = async (req, res) => {
     if (reqBody.email) {
       user = await userModel.findOne({ email: reqBody.email });
     } else {
-      user = await userModel.findOne({ userID: reqBody.userID });
+      user = await userModel.findOne({ userID: req.user.userID });
     }
 
     signInHelper(req, res, user);

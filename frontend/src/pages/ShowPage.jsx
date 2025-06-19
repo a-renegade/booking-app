@@ -17,6 +17,7 @@ const ShowPage = () => {
 
         const showRes = await axiosInstance.get(`/show/movie/${movieId}`);
         setShows(showRes.data);
+        // console.log(showRes)
       } catch (err) {
         toast.error("Failed to load show info");
       } finally {

@@ -33,7 +33,9 @@ const fetchSelectedSeatsByUser = async (showId, userID) => {
 
 const selectSeat = async (req, res) => {
   try {
-    const { showId, userID, row, col } = req.body;
+    const { userID }=req.user;
+    const { showId, row, col } = req.body;
+    console.log(showId,userID,row,col)
     const key = `seat:${showId}:${row}-${col}`;
 
     const count = await redis.hLen(key);
@@ -49,7 +51,8 @@ const selectSeat = async (req, res) => {
 
 const deselectSeat = async (req, res) => {
   try {
-    const { showId, userID, row, col } = req.body;
+    const { userID }=req.user;
+    const { showId , row, col } = req.body;
     const key = `seat:${showId}:${row}-${col}`;
 
     await redis.hDel(key, userID);
