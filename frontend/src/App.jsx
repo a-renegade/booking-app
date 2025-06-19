@@ -45,11 +45,11 @@ const App = () => {
         <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/"/>} />
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/"/>} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login"/>} />
-        <Route path="/shows/:movieId" element={<ShowPage />} />
-        <Route path="/shows/:showId/book" element={<BookingPage />} />
-        <Route path="/manage/movies" element={<ManageMovie />} />
-        <Route path="/manage/theaters" element={<ManageTheaterPage />} />
-        <Route path="/manage/shows" element={<ManageShowPage />} />
+        <Route path="/shows/:movieId" element={authUser ? <ShowPage /> : <Navigate to="/login" />} />
+        <Route path="/shows/:showId/book" element={authUser ? <BookingPage /> : <Navigate to="/login" />} />
+        <Route path="/manage/movies" element={authUser ? <ManageMovie /> : <Navigate to="/login" />} />
+        <Route path="/manage/theaters" element={authUser ? <ManageTheaterPage /> : <Navigate to="/login" />} />
+        <Route path="/manage/shows" element={authUser ? <ManageShowPage /> : <Navigate to="/login" />} />
 
       </Routes>
     </div>

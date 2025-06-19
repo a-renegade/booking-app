@@ -1,10 +1,11 @@
 import Show from "../models/showModel.js";
 
 const checkSeatAvailability = async (req, res, next) => {
-  const { userReferenceId, showId, seats } = req.body;
+  const { userReferenceId }=req.user;
+  const { showId, seats } = req.body;
 
   if (!userReferenceId || !showId || !seats?.length) {
-    return res.status(400).json({ message: "Missing showId or seats" });
+    return res.status(400).json({ message: "Missing some data in request body" });
   }
 
   try {
