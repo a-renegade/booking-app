@@ -1,11 +1,11 @@
 import { Server } from "socket.io";
-
+import "dotenv/config";
 let io;
 
 function setupSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173", // or your frontend URL
+      origin: "process.env.FRONTEND_URL", // or your frontend URL
       methods: ["GET", "POST"]
     }
   });

@@ -15,7 +15,7 @@ const BookingPage = () => {
   const [seatSelectionCount, setseatSelectionCount] = useState([]);
   
   useEffect(() => {
-    const socket = io("http://localhost:8888");
+    const socket = io(import.meta.env.SOCKET_URL);
     socket.emit("joinShowRoom", showId);
 
     socket.on("seatBooked", ({ seat }) => {
