@@ -5,7 +5,7 @@ let io;
 function setupSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: "process.env.FRONTEND_URL", // or your frontend URL
+      origin: process.env.FRONTEND_URL, // or your frontend URL
       methods: ["GET", "POST"]
     }
   });
