@@ -1,16 +1,30 @@
 import Show from "../models/showModel.js";
 import { fetchSelectedSeatsByUser , fetchSeatSelectionCounts } from "./cacheControllers/seat.controller.js";
 import { getCachedSurveyCurve } from "../utils/sigmoidFit.js"
+
+async function convertBookedSeatsMapToArray(bookedSeatsMap) {
+  const seats = [];
+  for (const [key, value] of bookedSeatsMap.entries()) {
+    const [row, colStr] = key.split("-");
+    seats.push({
+      row,
+      col: parseInt(colStr, 10),
+    });
+  }
+  return seats;
+}
+
+
 // Create a new show
 const createShow = async (req, res) => {
   try {
-    const { movieId, theaterId, showTime, bookedSeats } = req.body;
+    const { movieId, theaterId, showTime } = req.body;
 
     const show = await Show.create({
       movieId,
       theaterId,
       showTime,
-      bookedSeats,
+      bookedSeats: {},
     });
 
     res.status(201).json(show);
@@ -19,6 +33,7 @@ const createShow = async (req, res) => {
     res.status(500).json({ message: "Error creating show" });
   }
 };
+
 
 // Get all shows
 const getAllShows = async (req, res) => {
@@ -68,11 +83,11 @@ const getShowById = async (req, res) => {
     const seatSelectionCount=await fetchSeatSelectionCounts(id);
     
     const showData = show.toObject();
-
     showData.selectedSeats=selectedSeats;
     showData.probabilities=probabilities;
     showData.seatSelectionCount=seatSelectionCount;
-
+    showData.bookedSeats=await convertBookedSeatsMapToArray(show.bookedSeats);
+    
     res.status(200).json(showData);
   } catch (err) {
     console.error("Error fetching show:", err.message);

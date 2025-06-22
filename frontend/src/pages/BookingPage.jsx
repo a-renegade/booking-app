@@ -121,7 +121,7 @@ const toggleSeat = (row, col) => {
     return probabilities[cnt];
   };
   return (
-    <div className="p-6 pt-20">
+    <div className="p-6 pt-6">
       <h2 className="flex justify-center text-xl font-semibold mb-4">Select Your Seats</h2>
       <div className="flex flex-col gap-2 items-center">
         {Array.from({ length: layout.rows }, (_, i) => {

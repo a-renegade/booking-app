@@ -2,28 +2,37 @@ import Booking from "../models/bookingModel.js";
 import Show from "../models/showModel.js";
 import { processSurveyData } from "./cacheControllers/surveyData.controller.js";
 import { getIO } from "../socket/index.js";
+import { lockSeats, unlockSeats } from "../utils/booking.utils.js"
+
+
 
 const createBooking = async (req, res) => {
   try {
-    console.log(req.body);
-    const { userID }=req.user;
+    const { userID } = req.user;
     const { showId, seats, paymentStatus } = req.body;
-
+    const lockData=await lockSeats(showId, seats);
+    if(!lockData.success){
+      return res.status(409).json({
+        message: "Some seats are already locked by someone else",
+      });
+    }
     const booking = await Booking.create({
       userReferenceId: req.user.userReferenceId,
       showId,
       seats,
-      paymentStatus,
+      paymentStatus:"pending",
     });
 
-    const seatEntries = seats.map(seat => ({
-      row: seat.row,
-      col: seat.col,
-      bookedBy: booking._id,
-    }));
+    // Update bookedSeats as a map object
+
+    const seatUpdates = {};
+    seats.forEach(({ row, col }) => {
+      const key = `bookedSeats.${row}-${col}`;
+      seatUpdates[key] = { bookedBy: booking._id };
+    });
 
     await Show.findByIdAndUpdate(showId, {
-      $push: { bookedSeats: { $each: seatEntries } },
+      $set: seatUpdates,
     });
 
     const io = getIO();
@@ -41,6 +50,8 @@ const createBooking = async (req, res) => {
     res.status(500).json({ message: "Error creating booking" });
   }
 };
+
+
 
 const getAllBookings = async (req, res) => {
   try {

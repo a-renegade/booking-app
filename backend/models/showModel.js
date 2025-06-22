@@ -1,11 +1,5 @@
 import mongoose from "mongoose";
 
-const seatSchema = new mongoose.Schema({
-  row: String,
-  col: Number,
-  bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
-});
-
 const showSchema = new mongoose.Schema(
   {
     movieId: {
@@ -22,7 +16,14 @@ const showSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    bookedSeats: [seatSchema],
+    bookedSeats: {
+      type: Map,
+      of: new mongoose.Schema({
+        bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
+        bookedAt: { type: Date, default: Date.now }, 
+      }),
+      default: {},
+    },
   },
   { timestamps: true, versionKey: false }
 );
