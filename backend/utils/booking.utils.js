@@ -1,25 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import redis from '../lib/redis.js';
 
-/**
- * Formats seat keys for Redis lock.
- * @param {string} showId
- * @param {{ row: string, col: number }[]} seats
- * @returns {string[]}
- */
 function formatSeatKeys(showId, seats) {
   return seats.map(seat => `lock:seat:${showId}:${seat.row}-${seat.col}`);
 }
 
-/**
- * Locks multiple seats for a show using Redis Lua script.
- * @param {Redis} redis - Redis client instance 
- * @param {string} showId
- * @param {{ row: string, col: number }[]} seats
- * @param {number} ttlMs - Lock TTL in milliseconds (default 10 minutes)
- * @returns {{ success: boolean, lockToken: string | null }}
- */
-async function lockSeats( showId, seats, ttlMs = 10 * 60 * 1000) {
+async function lockSeats(showId, seats, ttlMs = 10 * 60 * 1000) {
   const lockToken = uuidv4();
   const keys = formatSeatKeys(showId, seats);
 
@@ -35,7 +21,10 @@ async function lockSeats( showId, seats, ttlMs = 10 * 60 * 1000) {
     return 1
   `;
 
-  const result = await redis.eval(luaScript, keys.length, ...keys, lockToken, ttlMs);
+  const result = await redis.eval(luaScript, {
+    keys,
+    arguments: [lockToken, ttlMs],
+  });
 
   return {
     success: result === 1,
@@ -43,15 +32,7 @@ async function lockSeats( showId, seats, ttlMs = 10 * 60 * 1000) {
   };
 }
 
-/**
- * Unlocks seats by checking that lockToken matches.
- * @param {Redis} redis - Redis client instance
- * @param {string} showId
- * @param {{ row: string, col: number }[]} seats
- * @param {string} lockToken
- * @returns {boolean}
- */
-async function unlockSeats( showId, seats, lockToken) {
+async function unlockSeats(showId, seats, lockToken) {
   const keys = formatSeatKeys(showId, seats);
 
   const luaScript = `
@@ -63,25 +44,27 @@ async function unlockSeats( showId, seats, lockToken) {
     return 1
   `;
 
-  const result = await redis.eval(luaScript, keys.length, ...keys, lockToken);
+  const result = await redis.eval(luaScript, {
+    keys,
+    arguments: [lockToken],
+  });
+
   return result === 1;
 }
 
-async function cacheBookedSeats( showId, seats) {
-  const pipeline = redis.pipeline();
-
+async function cacheBookedSeats(showId, seats) {
+  const multi = redis.multi();
   for (const seat of seats) {
     const key = `booked:seat:${showId}:${seat.row}-${seat.col}`;
-    pipeline.set(key, "true");
+    multi.set(key, "true");
   }
-
-  await pipeline.exec();
+  await multi.exec();
   return true;
 }
-async function isAnySeatBooked( showId, seats) {
-  const keys = seats.map(seat => `booked:seat:${showId}:${seat.row}-${seat.col}`);
-  const results = await redis.mGet(...keys);
 
+async function isAnySeatBooked(showId, seats) {
+  const keys = seats.map(seat => `booked:seat:${showId}:${seat.row}-${seat.col}`);
+  const results = await redis.mGet(keys);
   return results.some(value => value !== null);
 }
 
