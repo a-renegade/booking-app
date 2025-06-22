@@ -23,7 +23,7 @@ async function lockSeats(showId, seats, ttlMs = 10 * 60 * 1000) {
 
   const result = await redis.eval(luaScript, {
     keys,
-    arguments: [lockToken, ttlMs],
+    arguments: [lockToken, String(ttlMs)],
   });
 
   return {
@@ -31,6 +31,7 @@ async function lockSeats(showId, seats, ttlMs = 10 * 60 * 1000) {
     lockToken: result === 1 ? lockToken : null,
   };
 }
+
 
 async function unlockSeats(showId, seats, lockToken) {
   const keys = formatSeatKeys(showId, seats);
