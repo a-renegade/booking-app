@@ -1,4 +1,4 @@
-import redis from "../../lib/redis.js";
+import redis from "../../lib/redis/redis.js";
 import Survey from "../../models/surveyModel.js";
 
 const SURVEY_KEY_PREFIX = "survey:data:";

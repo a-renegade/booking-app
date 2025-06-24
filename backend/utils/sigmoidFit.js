@@ -1,5 +1,5 @@
 import Survey from '../models/surveyModel.js';
-import redis from '../lib/redis.js';
+import redis from '../lib/redis/redis.js';
 import { surveyWindowDays, maxUsers } from '../config/survey.config.js';
 
 

@@ -16,6 +16,7 @@ import seatRoutes from "./routes/seat.routes.js";
 import { getAllSurveyData } from "./controllers/cacheControllers/surveyData.controller.js";
 import { fitAndCacheSurveyCurve } from "./utils/sigmoidFit.js";
 import { setupSocket } from "./socket/index.js";
+import { generateSegmentsForAllShows, displaySegmentData } from "./utils/cache.utils.js"
 import "./cron/surveyCron.js";
 import "dotenv/config";
 const app = express();
@@ -26,13 +27,22 @@ const serverPortNumber = process.env.PORT;
 const server = http.createServer(app);
 setupSocket(server);
 
-server.listen(serverPortNumber, async () => {
-  console.log("SERVER IS RUNNING AT PORT:", serverPortNumber);
+
+
+const startServer = async () => {
   // const seatProbabilities = await fitAndCacheSurveyCurve();
   // console.log(seatProbabilities);
-});
- 
-const DB_URL = process.env.MONGO_URI;
+  await generateSegmentsForAllShows();
+  // await displaySegmentData("6855d0d3276c2b1561236df3")
+  server.listen(serverPortNumber, () => {
+    console.log("SERVER IS RUNNING AT PORT:", serverPortNumber);
+  });
+};
+
+startServer();
+
+
+const DB_URL = process.env.MONGO_URI; 
 mongoose.connect(DB_URL);
 const db = mongoose.connection;
 

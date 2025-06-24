@@ -40,10 +40,10 @@ const getAllTheaters = async (req, res) => {
 };
 
 // Get a single theater by ID
-const getTheaterById = async (req, res) => {
+const getTheaterById = async (req, res) => { 
   try {
     const { id } = req.params;
-    const theater = await Theater.findById(id);
+    const theater = await Theater.findById(id); 
     if (!theater) {
       return res.status(404).json({ message: "Theater not found" });
     }
@@ -64,9 +64,11 @@ const getTheatersByOwner = async (req, res) => {
     res.status(500).json({ message: "Error fetching theaters" });
   }
 };
+
 export {
   createTheater,
   getAllTheaters,
   getTheaterById,
-  getTheatersByOwner,
+  getTheatersByOwner, 
 };
+  

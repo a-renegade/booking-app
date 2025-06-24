@@ -6,10 +6,12 @@ import checkSeatAvailability from "../middlewares/booking.middleware.js";
 import {
   createBooking,
   getAllBookings,
-  getBookingById
+  getBookingById,
+  autoBooking,
 } from "../controllers/booking.controller.js";
 
 router.post("/", [authCheck, checkSeatAvailability], createBooking);
+router.post("/auto", [authCheck], autoBooking);
 router.get("/", [authCheck], getAllBookings);
 router.get("/:id", [authCheck], getBookingById);
 

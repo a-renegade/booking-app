@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { axiosInstance } from "../lib/axios";
 import Seat from "../components/Seat";
 import toast from "react-hot-toast";
@@ -137,20 +137,27 @@ const toggleSeat = (row, col) => {
                   isBooked={isBooked(rowLabel, j + 1)}
                   isSelected={isSelected(rowLabel, j + 1)}
                   onClick={() => toggleSeat(rowLabel, j + 1)}
-                  probability={getProbability(rowLabel, j + 1)}
+                  probability={getProbability(rowLabel, j + 1)} 
                 />
               ))}
             </div>
           );
         })}
       </div>
-      <div className="flex justify-center">
+
+      <div className="flex flex-col items-center">
         <button
           onClick={handleBooking}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="mt-2 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Book Now
         </button>
+        <Link
+          to={`/shows/${showId}/book/auto`}
+          className="mt-2 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+        >
+          Automate Booking
+        </Link>
       </div>
     </div>
   );

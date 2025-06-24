@@ -57,7 +57,7 @@ const signIn = async (req, res, next) => {
       return res.status(400).send({ message: "password not provided for login" });
     }
 
-    let user;
+    let user; 
     if (reqBody.userID) {
       user = await userModel.findOne({ userID: reqBody.userID });
       if (!user) {

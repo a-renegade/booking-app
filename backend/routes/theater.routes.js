@@ -7,7 +7,7 @@ import {
   getTheaterById,
   getTheatersByOwner,
 } from "../controllers/theater.controller.js";
-
+ 
 import { authCheck } from "../middlewares/auth.middleware.js";
 
 router.post("/", [authCheck], createTheater);

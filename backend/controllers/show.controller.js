@@ -1,20 +1,20 @@
 import Show from "../models/showModel.js";
 import { fetchSelectedSeatsByUser , fetchSeatSelectionCounts } from "./cacheControllers/seat.controller.js";
 import { getCachedSurveyCurve } from "../utils/sigmoidFit.js"
-
+import { generateSegmentForShow } from "../utils/cache.utils.js"
 async function convertBookedSeatsMapToArray(bookedSeatsMap) {
   const seats = [];
   for (const [key, value] of bookedSeatsMap.entries()) {
     const [row, colStr] = key.split("-");
     seats.push({
       row,
-      col: parseInt(colStr, 10),
+      col: parseInt(colStr, 10), 
     });
-  }
-  return seats;
-}
+  } 
+  return seats; 
+} 
 
-
+ 
 // Create a new show
 const createShow = async (req, res) => {
   try {
@@ -26,7 +26,7 @@ const createShow = async (req, res) => {
       showTime,
       bookedSeats: {},
     });
-
+    await generateSegmentForShow(show._id);
     res.status(201).json(show);
   } catch (err) {
     console.error("Error creating show:", err.message);
@@ -55,7 +55,7 @@ const getShowsByMovie = async (req, res) => {
     const { movieId } = req.params;
 
     const shows = await Show.find({ movieId })
-      .populate("theaterId", "name layout")
+      .populate("theaterId", "name layout")  
       .sort("showTime");
 
     res.status(200).json(shows);

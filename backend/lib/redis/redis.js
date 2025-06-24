@@ -8,5 +8,6 @@ const client = redis.createClient({
 client.on("error", (err) => console.error("Redis error:", err));
 
 client.connect(); // returns a promise
-
+ 
 export default client;
+  

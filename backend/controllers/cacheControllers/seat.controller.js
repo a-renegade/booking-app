@@ -1,4 +1,4 @@
-import redis from "../../lib/redis.js";
+import redis from "../../lib/redis/redis.js";
 
 const fetchSeatSelectionCounts = async (showId) => {
   const pattern = `seat:${showId}:*`;

@@ -2,7 +2,67 @@ import Booking from "../models/bookingModel.js";
 import Show from "../models/showModel.js";
 import { processSurveyData } from "./cacheControllers/surveyData.controller.js";
 import { getIO } from "../socket/index.js";
-import { lockSeats, unlockSeats } from "../utils/booking.utils.js"
+import { lockSeats, confirmBooking ,allocateSubgroups } from "../utils/booking.utils.js"
+import { displaySegmentData } from "../utils/cache.utils.js"
+
+
+const autoBooking = async (req, res) => {
+  try {
+    const { userID } = req.user;
+    const { showId, sets, allowSolo } = req.body;
+
+    const userCenter = "E-5"; // default or computed center
+    let allocation = null;
+
+    for (const subgroups of sets) {
+      const result = await allocateSubgroups(showId, userCenter, subgroups);
+      
+      if (result.success) {
+        allocation = { ...result, subgroups };
+        break;
+      }
+    }
+
+    if (!allocation) {
+      return res.status(409).json({
+        message: "Seat allocation failed",
+        result: { success: false },
+      });
+    }
+
+    const { lockId, seats } = allocation;
+
+    const booking = await Booking.create({
+      userReferenceId: req.user.userReferenceId,
+      showId,
+      seats,
+      lockToken: lockId,
+      paymentStatus: "pending",
+    });
+
+    const io = getIO();
+    seats.forEach(seat => {
+      io.to(`show:${showId}`).emit("seatLocked", {
+        seat,
+        userID,
+      });
+    });
+
+    const confirmed = await confirmBooking(booking._id); 
+    if (!confirmed) {
+      return res.status(400).json({ message: "Seat confirmation failed" });
+    }
+
+    res.status(201).json({
+      message: "Auto booking confirmed",
+      booking,
+      allocatedSubgroups: allocation.subgroups,
+    });
+  } catch (err) {
+    console.error("Error in auto booking:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 
 
@@ -13,9 +73,18 @@ const createBooking = async (req, res) => {
     const lockData=await lockSeats(showId, seats);
     if(!lockData.success){
       return res.status(409).json({
-        message: "Some seats are already locked by someone else",
+        message: "Some seats locked by someone else",
       });
     }
+    // console.log(lockData.success)
+    const io = getIO();
+    seats.forEach(seat => {
+      io.to(`show:${showId}`).emit("seatLocked", {
+        seat,
+        userID,
+      });
+    });
+
     const booking = await Booking.create({
       userReferenceId: req.user.userReferenceId,
       showId,
@@ -23,30 +92,28 @@ const createBooking = async (req, res) => {
       paymentStatus:"pending",
     });
 
-    // Update bookedSeats as a map object
+    // Update bookedSeats as a map object after the payment
 
-    const seatUpdates = {};
-    seats.forEach(({ row, col }) => {
-      const key = `bookedSeats.${row}-${col}`;
-      seatUpdates[key] = { bookedBy: booking._id };
-    });
+    // const seatUpdates = {};
+    // seats.forEach(({ row, col }) => {
+    //   const key = `bookedSeats.${row}-${col}`;
+    //   seatUpdates[key] = { bookedBy: booking._id };
+    // });
 
-    await Show.findByIdAndUpdate(showId, {
-      $set: seatUpdates,
-    });
+    // await Show.findByIdAndUpdate(showId, {
+    //   $set: seatUpdates,
+    // });
 
-    const io = getIO();
-    seats.forEach(seat => {
-      io.to(`show:${showId}`).emit("seatBooked", {
-        seat,
-        userID,
-      });
-    });
+    // processSurveyData({ showId, userID, seats });
 
-    processSurveyData({ showId, userID, seats });
+    // await displaySegmentData(showId);
+    const confirmedBooking = await confirmBooking(booking._id);
+
+
+    
     res.status(201).json(booking);
   } catch (err) {
-    console.error("Error creating booking:", err.message);
+    console.error("Error creating booking:", err);
     res.status(500).json({ message: "Error creating booking" });
   }
 };
@@ -87,4 +154,5 @@ export {
   createBooking,
   getAllBookings,
   getBookingById,
+  autoBooking,
 };

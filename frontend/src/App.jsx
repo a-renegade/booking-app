@@ -16,6 +16,7 @@ import BookingPage from "./pages/BookingPage";
 import ManageMovie from "./pages/ManageMoviePage";
 import ManageTheaterPage from "./pages/ManageTheaterPage";
 import ManageShowPage from "./pages/ManageShowPage";
+import AutoBookingPage from "./pages/AutoBookingPage";
 
 
 const App = () => {
@@ -47,6 +48,7 @@ const App = () => {
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login"/>} />
         <Route path="/shows/:movieId" element={authUser ? <ShowPage /> : <Navigate to="/login" />} />
         <Route path="/shows/:showId/book" element={authUser ? <BookingPage /> : <Navigate to="/login" />} />
+        <Route path="/shows/:showId/book/auto" element={authUser ? <AutoBookingPage /> : <Navigate to="/login" />} />
         <Route path="/manage/movies" element={authUser ? <ManageMovie /> : <Navigate to="/login" />} />
         <Route path="/manage/theaters" element={authUser ? <ManageTheaterPage /> : <Navigate to="/login" />} />
         <Route path="/manage/shows" element={authUser ? <ManageShowPage /> : <Navigate to="/login" />} />
