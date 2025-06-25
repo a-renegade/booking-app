@@ -172,4 +172,16 @@ export async function displaySegmentData(showId) {
   }
 
   console.log("\n--- ✅ End of Segment Dump ---\n");
+} 
+
+export async function getSegmentLengths(showId) {
+  const key = `segment:sorted-centers:${showId}`;
+  try {
+    const results = await redis.zRangeWithScores(key, 0, -1); // ascending order
+    const scores = results.map(({ score }) => score);
+    return scores;
+  } catch (err) {
+    console.error("❌ Failed to get segment scores:", err);
+    return [];
+  }
 }

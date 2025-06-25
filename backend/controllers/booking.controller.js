@@ -4,7 +4,7 @@ import { processSurveyData } from "./cacheControllers/surveyData.controller.js";
 import { getIO } from "../socket/index.js";
 import { lockSeats, confirmBooking ,allocateSubgroups } from "../utils/booking.utils.js"
 import { displaySegmentData } from "../utils/cache.utils.js"
-
+import redis from "../lib/redis/redis.js";
 
 const autoBooking = async (req, res) => {
   try {
@@ -161,4 +161,4 @@ export {
   getAllBookings,
   getBookingById,
   autoBooking,
-};
+}; 

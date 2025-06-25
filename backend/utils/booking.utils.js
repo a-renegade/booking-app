@@ -22,7 +22,7 @@ const allocateSubgroups = async (showId, userCenter, subgroups) => {
       showId,
       userCenter,
       JSON.stringify(subgroups),
-    ],
+    ],  
   });
   const result = JSON.parse(luaResult);
   console.log(result);

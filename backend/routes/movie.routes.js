@@ -11,4 +11,4 @@ router.get("/:id", [authCheck], movieController.getMovieById);
 router.put("/:id", [authCheck], validateMovie, movieController.updateMovie);
 router.delete("/:id", [authCheck], movieController.deleteMovie);
 
-export default router; 
+export default router;

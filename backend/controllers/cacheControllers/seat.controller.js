@@ -100,7 +100,24 @@ const getShowSeatSelectionCounts = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const getSegmentInfo = async (req, res) => {
+  try {
+    const { showId } = req.query;
+    if (!showId) return res.status(400).json({ message: "showId required" });
 
+    const redisKey = `segment:sorted-centers:${showId}`;
+    const raw = await redis.zRangeWithScores(redisKey, 0, -1); // [{ value, score }]
+    const segmentLengths = raw.map((entry) => entry.score);
+
+    res.json({
+      segmentLengths,
+      fetchedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error("Error in getSegmentInfo:", err);
+    res.status(500).json({ message: "Failed to fetch segment info" });
+  }
+};
 export {
   fetchSelectedSeatsByUser,
   selectSeat,
@@ -109,4 +126,5 @@ export {
   getSeatUsers,
   getShowSeatSelectionCounts,
   fetchSeatSelectionCounts,
+  getSegmentInfo,
 };

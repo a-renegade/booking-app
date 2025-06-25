@@ -32,14 +32,15 @@ setupSocket(server);
 const startServer = async () => {
   // const seatProbabilities = await fitAndCacheSurveyCurve();
   // console.log(seatProbabilities);
+  
   await generateSegmentsForAllShows();
-  await displaySegmentData("685b0cdb8a50e8342f4d84d4") 
+  // await displaySegmentData("685b0cdb8a50e8342f4d84d4") 
   server.listen(serverPortNumber, () => {
     console.log("SERVER IS RUNNING AT PORT:", serverPortNumber);
   });
 };
  
-startServer();
+startServer(); 
 
 
 const DB_URL = process.env.MONGO_URI; 

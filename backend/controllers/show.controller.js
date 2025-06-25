@@ -72,6 +72,9 @@ const getShowsByMovie = async (req, res) => {
   }
 };
 
+
+
+
 // Get a single show by ID
 const getShowById = async (req, res) => {
   try {
@@ -94,7 +97,7 @@ const getShowById = async (req, res) => {
     showData.probabilities=probabilities;
     showData.seatSelectionCount=seatSelectionCount;
     showData.bookedSeats=await convertBookedSeatsMapToArray(show.bookedSeats);
-    
+
     res.status(200).json(showData);
   } catch (err) {
     console.error("Error fetching show:", err.message);

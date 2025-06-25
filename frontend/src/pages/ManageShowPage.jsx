@@ -68,7 +68,9 @@ const ManageShowPage = () => {
   return (
     <div className="p-6 pt-24 max-w-4xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6">Manage Shows</h2>
-
+      { theaters.length===0 && (
+        <h1>CREATE A THEATER TO ADD A SHOW IN IT</h1>
+      )}
       {theaters.map((theater) => (
         <div key={theater._id} className="border p-4 rounded mb-6">
           <div className="flex justify-between items-center mb-2">
