@@ -5,6 +5,7 @@ import Booking from "../models/bookingModel.js";
 import Show from "../models/showModel.js";
 import { getIO } from "../socket/index.js";
 import { processSurveyData } from "../controllers/cacheControllers/surveyData.controller.js";
+import { displaySegmentData } from "./cache.utils.js"
 function formatSeats(showId, seats) {
   return seats.map(seat => `${seat.row}-${seat.col}`);
 }
@@ -23,9 +24,10 @@ const allocateSubgroups = async (showId, userCenter, subgroups) => {
       JSON.stringify(subgroups),
     ],
   });
-  console.log(luaResult);
-    
   const result = JSON.parse(luaResult);
+  console.log(result);
+  displaySegmentData(showId);
+  
   if (!result.success) {
     return { success: false, failedSubgroup: result.failedSubgroup };
   }
@@ -39,7 +41,7 @@ const allocateSubgroups = async (showId, userCenter, subgroups) => {
       seats.push({ row, col });
     }
   }
-
+ 
   return {
     success: true,
     lockId,
@@ -107,55 +109,63 @@ async function isAnySeatBooked(showId, seats) {
 }
 
 const confirmBooking = async (bookingId) => {
-  const booking = await Booking.findById(bookingId).populate("userReferenceId");
-  if (!booking || booking.paymentStatus !== "pending") return false;
+  try {
+    
+    const booking = await Booking.findById(bookingId).populate("userReferenceId");
+    // console.log(booking) 
+    if (!booking || booking.paymentStatus !== "pending") return false;
 
-  const { showId, seats, lockToken } = booking;
-  const userID = booking.userReferenceId.userID;
-  const alreadyBooked = await isAnySeatBooked(showId, seats);
-  if (alreadyBooked) {
-    return false;
-  }
+    const { showId, seats, lockToken } = booking;
+    const userID = booking.userReferenceId.userID;
 
-  const success = await cacheBookedSeats( showId, seats);
-  if (!success) return false;
-
-  const show = await Show.findById(showId);
-  if (!show) return false;
-
-  const seatUpdates = {};
-  for (const { row, col } of seats) {
-    const seatKey = `${row}-${col}`;
-    if (!show.bookedSeats?.get(seatKey)) {
-      seatUpdates[`bookedSeats.${seatKey}`] = { bookedBy: booking._id };
-    } else {
-      
-      booking.paymentStatus = "failed";
-      await booking.save();
+    const alreadyBooked = await isAnySeatBooked(showId, seats);
+    if (alreadyBooked) {
       return false;
     }
+
+    const success = await cacheBookedSeats(showId, seats);
+    if (!success) return false;
+
+    const show = await Show.findById(showId);
+    if (!show) return false;
+
+    const seatUpdates = {}; 
+    for (const { row, col } of seats) {
+      const seatKey = `${row}-${col}`;
+      if (!show.bookedSeats?.get(seatKey)) {
+        seatUpdates[`bookedSeats.${seatKey}`] = { bookedBy: booking._id };
+      } else {
+        booking.paymentStatus = "failed";
+        await booking.save();
+        return false;
+      }
+    }
+
+    if (Object.keys(seatUpdates).length > 0) {
+      await Show.findByIdAndUpdate(showId, { $set: seatUpdates });
+    }
+
+    booking.paymentStatus = "confirmed";
+    await booking.save();
+
+    const io = getIO();
+    for (const seat of seats) {
+      io.to(`show:${showId}`).emit("seatBooked", {
+        seat,
+        userID,
+      });
+    }
+
+    // Trigger survey logic
+    processSurveyData({ showId, userID, seats });
+
+    return true;
+  } catch (err) {
+    console.error("Error in confirmBooking:", err);
+    return false;
   }
-
-  if (Object.keys(seatUpdates).length > 0) {
-    await Show.findByIdAndUpdate(showId, { $set: seatUpdates });
-  }
-
-  booking.paymentStatus = "confirmed";
-  await booking.save();
-
-
-  const io = getIO();
-  for (const seat of seats) {
-    io.to(`show:${showId}`).emit("seatBooked", {
-      seat,
-      userID,
-    });
-  }
-
-  // Trigger survey logic
-  processSurveyData({ showId, userID , seats });
-  return true;
 };
+
 
 
 export {

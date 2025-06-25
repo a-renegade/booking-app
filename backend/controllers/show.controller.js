@@ -1,6 +1,6 @@
 import Show from "../models/showModel.js";
 import { fetchSelectedSeatsByUser , fetchSeatSelectionCounts } from "./cacheControllers/seat.controller.js";
-import { getCachedSurveyCurve } from "../utils/sigmoidFit.js"
+import { getCachedSurveyCurve } from "../utils/probabilities.utils.js"
 import { generateSegmentForShow } from "../utils/cache.utils.js"
 async function convertBookedSeatsMapToArray(bookedSeatsMap) {
   const seats = [];
@@ -18,6 +18,13 @@ async function convertBookedSeatsMapToArray(bookedSeatsMap) {
 // Create a new show
 const createShow = async (req, res) => {
   try {
+    const userType=req.user.userType;
+    if(userType !== "OWNER"){
+      return res.status(403).send({
+          success: false,
+          message: "You are not authorized to create a show"
+      });
+    }
     const { movieId, theaterId, showTime } = req.body;
 
     const show = await Show.create({

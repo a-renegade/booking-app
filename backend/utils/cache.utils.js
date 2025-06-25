@@ -94,18 +94,31 @@ export async function generateSegmentForShow(showId) {
     }
   }
 
+  
   const pipeline = redis.multi();
+
   pipeline.del(
     `segment:seat-to-center:${showId}`,
     `segment:center-to-data:${showId}`,
     `segment:sorted-centers:${showId}`
   );
-  pipeline.hSet(`segment:seat-to-center:${showId}`, seatToCenter);
-  pipeline.hSet(`segment:center-to-data:${showId}`, centerToData);
-  pipeline.zAdd(`segment:sorted-centers:${showId}`, sortedCenters);
+
+  if (Object.keys(seatToCenter).length > 0) {
+    pipeline.hSet(`segment:seat-to-center:${showId}`, seatToCenter);
+  }
+
+  if (Object.keys(centerToData).length > 0) {
+    pipeline.hSet(`segment:center-to-data:${showId}`, centerToData);
+  }
+
+  if (Object.keys(sortedCenters).length > 0) {
+    pipeline.zAdd(`segment:sorted-centers:${showId}`, sortedCenters);
+  }
+
   await pipeline.exec();
 
   console.log(`✅ Segments cached for show ${showId}`);
+  // displaySegmentData(showId)
 }
  
 

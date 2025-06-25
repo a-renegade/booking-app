@@ -14,7 +14,7 @@ import theaterRoutes from "./routes/theater.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import seatRoutes from "./routes/seat.routes.js";
 import { getAllSurveyData } from "./controllers/cacheControllers/surveyData.controller.js";
-import { fitAndCacheSurveyCurve } from "./utils/sigmoidFit.js";
+import { fitAndCacheSurveyCurve } from "./utils/probabilities.utils.js";
 import { setupSocket } from "./socket/index.js";
 import { generateSegmentsForAllShows, displaySegmentData } from "./utils/cache.utils.js"
 import "./cron/surveyCron.js";
@@ -33,12 +33,12 @@ const startServer = async () => {
   // const seatProbabilities = await fitAndCacheSurveyCurve();
   // console.log(seatProbabilities);
   await generateSegmentsForAllShows();
-  // await displaySegmentData("6855d0d3276c2b1561236df3")
+  await displaySegmentData("685b0cdb8a50e8342f4d84d4") 
   server.listen(serverPortNumber, () => {
     console.log("SERVER IS RUNNING AT PORT:", serverPortNumber);
   });
 };
-
+ 
 startServer();
 
 

@@ -99,7 +99,9 @@ for _, subgroupSize in ipairs(subgroups) do
     local leftCenter = makeSeat(row, math.floor((leftStartCol + leftEndCol) / 2))
     local leftData = {
       start = makeSeat(row, leftStartCol),
-      ["end"] = makeSeat(row, leftEndCol)
+      ["end"] = makeSeat(row, leftEndCol),
+      length = leftEndCol - leftStartCol + 1,
+      distance = manhattan(userRow, userCol, row, math.floor((leftStartCol + leftEndCol) / 2))
     }
     redis.call("HSET", prefix .. "center-to-data:" .. showId, leftCenter, cjson.encode(leftData))
     redis.call("ZADD", prefix .. "sorted-centers:" .. showId, leftEndCol - leftStartCol + 1, leftCenter)
@@ -110,7 +112,9 @@ for _, subgroupSize in ipairs(subgroups) do
     local rightCenter = makeSeat(row, math.floor((rightStartCol + rightEndCol) / 2))
     local rightData = {
       start = makeSeat(row, rightStartCol),
-      ["end"] = makeSeat(row, rightEndCol)
+      ["end"] = makeSeat(row, rightEndCol),
+      length = rightEndCol - rightStartCol + 1,
+      distance = manhattan(userRow, userCol, row, math.floor((rightStartCol + rightEndCol) / 2))
     }
     redis.call("HSET", prefix .. "center-to-data:" .. showId, rightCenter, cjson.encode(rightData))
     redis.call("ZADD", prefix .. "sorted-centers:" .. showId, rightEndCol - rightStartCol + 1, rightCenter)
@@ -144,6 +148,16 @@ for _, alloc in ipairs(seatRanges) do
       end
       return cjson.encode({ success = false, failedSubgroup = alloc.size })
     end
+  end
+end
+
+-- 🧹 Cleanup seat-to-center for deleted segments
+for _, s in ipairs(deletedSegments) do
+  local rowStart, colStart = parseSeat(s.data.start)
+  local _, colEnd = parseSeat(s.data["end"])
+  for c = colStart, colEnd do
+    local seat = makeSeat(rowStart, c)
+    redis.call("HDEL", prefix .. "seat-to-center:" .. showId, seat)
   end
 end
 

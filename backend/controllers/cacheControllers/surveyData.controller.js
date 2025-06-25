@@ -17,7 +17,7 @@ const fetchAllSurveyData = async () => {
         booked: data.booked ? JSON.parse(data.booked) : 0,
         notBooked: data.notBooked ? JSON.parse(data.notBooked) : 0,
       };
-    }
+    } 
 
     return allSurveys;
   } catch (err) {

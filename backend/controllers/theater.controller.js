@@ -3,6 +3,13 @@ import Theater from "../models/theaterModel.js";
 // Create a new theater
 const createTheater = async (req, res) => {
   try {
+    const userType=req.user.userType;
+    if(userType !== "OWNER"){
+      return res.status(403).send({
+          success: false,
+          message: "You are not authorized to create a theater"
+      });
+    }
     const { name, layout } = req.body;
 
     if (!name || !layout?.rows || !layout?.columns) {

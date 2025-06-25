@@ -3,6 +3,13 @@ import Movie from "../models/movieModel.js";
 // Create a new movie
 const createMovie = async (req, res) => {
   try {
+    const userType=req.user.userType;
+    if(userType !== "ADMIN"){
+      return res.status(403).send({
+          success: false,
+          message: "You are not authorized to create a movie"
+      });
+    }
     const { title, durationMinutes, releaseDate } = req.body;
     console.log("Creating movie with data:", req.body);
 

@@ -9,7 +9,7 @@ export default function AutoBookingPage() {
   const [sets, setSets] = useState([[1]]);
   const [allowSolo, setAllowSolo] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [result, setResult] = useState(null);
   const updateSet = (setIdx, value) => {
     const sizes = value
       .split(",")
@@ -47,8 +47,8 @@ export default function AutoBookingPage() {
         { withCredentials: true } // 🔐 to send cookies if needed for auth
       );
 
-      toast.success("Auto booking confirmed");
-      console.log("Booking:", response.data.booking);
+      setResult(response.data);
+      console.log("Booking:", response.data);
     } catch (err) {
       console.error(err);
       toast.error(
@@ -138,7 +138,7 @@ export default function AutoBookingPage() {
           Add Another Set
         </button>
 
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2"> 
           <input
             type="checkbox"
             checked={allowSolo}
@@ -151,6 +151,7 @@ export default function AutoBookingPage() {
         <button
           onClick={handleBooking}
           className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          // disabled={loading}
           disabled={false}
         >
           {loading ? "Booking..." : "Book"}
@@ -161,7 +162,21 @@ export default function AutoBookingPage() {
             Maximum of 4 sets allowed.
           </div>
         )}
+        {result && (
+          <div className="mt-6 border border-green-400 bg-green-50 p-4 rounded text-sm">
+            <h2 className="font-bold text-green-800 mb-2">✅ Booking Successful</h2>
+            <p className="mb-1">Message: {result.message}</p>
+            <p className="mb-1">Booking ID: {result.booking?._id}</p>
+            <p className="mb-2">Allocated Seats:</p>
+            <ul className="list-disc list-inside">
+              {result.allocatedSeats?.map((seat, idx) => (
+                <li key={idx}>{`${seat.row}-${seat.col}`}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
+    
   );
 }

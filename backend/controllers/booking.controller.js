@@ -15,21 +15,23 @@ const autoBooking = async (req, res) => {
     let allocation = null;
 
     for (const subgroups of sets) {
-      const result = await allocateSubgroups(showId, userCenter, subgroups);
+      const sortedSubgroups = [...subgroups].sort((a, b) => b - a);
+      // const sortedSubgroups=subgroups;
+      const result = await allocateSubgroups(showId, userCenter, sortedSubgroups);
       
       if (result.success) {
-        allocation = { ...result, subgroups };
+        allocation = { ...result, sortedSubgroups };
         break;
       }
     }
-
-    if (!allocation) {
+    
+    if (!allocation) { 
       return res.status(409).json({
         message: "Seat allocation failed",
         result: { success: false },
       });
     }
-
+    
     const { lockId, seats } = allocation;
 
     const booking = await Booking.create({
@@ -47,16 +49,20 @@ const autoBooking = async (req, res) => {
         userID,
       });
     });
-
-    const confirmed = await confirmBooking(booking._id); 
+    
+    const bookingId=booking._id;
+    
+    const confirmed = await confirmBooking(bookingId); 
+    // console.log(confirmed)
     if (!confirmed) {
       return res.status(400).json({ message: "Seat confirmation failed" });
     }
-
+    await displaySegmentData(showId);
+    // console.log(allocation.seats);
     res.status(201).json({
       message: "Auto booking confirmed",
       booking,
-      allocatedSubgroups: allocation.subgroups,
+      allocatedSeats: allocation.seats,
     });
   } catch (err) {
     console.error("Error in auto booking:", err);
@@ -106,7 +112,7 @@ const createBooking = async (req, res) => {
 
     // processSurveyData({ showId, userID, seats });
 
-    // await displaySegmentData(showId);
+    await displaySegmentData(showId);
     const confirmedBooking = await confirmBooking(booking._id);
 
 
