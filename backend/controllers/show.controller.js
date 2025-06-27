@@ -19,7 +19,7 @@ async function convertBookedSeatsMapToArray(bookedSeatsMap) {
 const createShow = async (req, res) => {
   try {
     const userType=req.user.userType;
-    if(userType !== "OWNER"){
+    if(userType !== "OWNER" && userType !== "ADMIN"){
       return res.status(403).send({
           success: false,
           message: "You are not authorized to create a show"

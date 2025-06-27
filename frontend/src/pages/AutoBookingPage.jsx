@@ -147,7 +147,7 @@ export default function AutoBookingPage() {
             )}
 
             {isValid && (
-              <div className="flex gap-6 mb-2">
+              <div className="flex flex-wrap gap-6 mb-2">
                 {set.map((size, i) => (
                   <div
                     key={i}

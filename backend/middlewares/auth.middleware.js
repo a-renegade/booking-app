@@ -2,11 +2,10 @@ import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 
 const signUp = async (req, res, next) => {
-  console.log("signup API called");
   try {
     req.user = req.user || {};
     const reqBody = req.body;
-    console.log(reqBody);
+    console.log("signup API called for",reqBody);
 
     if (!reqBody.fullName) {
       console.log("name not provided for signUP");

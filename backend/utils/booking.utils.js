@@ -10,20 +10,21 @@ function formatSeats(showId, seats) {
   return seats.map(seat => `${seat.row}-${seat.col}`);
 }
 
-const allocateSubgroups = async (showId, userCenter, subgroups) => {
+const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
   const ttl = 30000;
   const lockId = uuidv4();
-
+  console.time("subgroupAllocationScript");
   const luaResult = await redis.eval(subgroupAllocationScript, {
     keys: [],
     arguments: [
       lockId,
       ttl.toString(),
       showId,
-      userCenter,
+      theaterCenter,
       JSON.stringify(subgroups),
     ],  
   });
+  console.timeEnd("subgroupAllocationScript");
   const result = JSON.parse(luaResult);
   console.log(result);
   displaySegmentData(showId);
@@ -50,10 +51,10 @@ const allocateSubgroups = async (showId, userCenter, subgroups) => {
 };
 
 
-async function lockSeats(showId, seats, ttlMs = 10 * 60 * 1000) {
+async function lockSeats(showId, seats , theaterCenter = "E-5", ttlMs = 5 * 60 * 1000 ) {
   const lockToken = uuidv4();
   const formattedSeats = formatSeats(showId, seats);
-  const theaterCenter="E-5";
+  
   const result = await redis.eval(lockAndSplitSeatsScript, {
     keys: formattedSeats, // This becomes KEYS in Lua
     arguments: [

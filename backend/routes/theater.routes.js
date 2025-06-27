@@ -14,6 +14,6 @@ router.post("/", [authCheck], createTheater);
 router.get("/", [authCheck], getAllTheaters);
 router.get("/owner",[ authCheck ], getTheatersByOwner);
 router.get("/:id", [authCheck], getTheaterById);
-
+ 
 
 export default router;

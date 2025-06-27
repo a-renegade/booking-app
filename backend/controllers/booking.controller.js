@@ -17,7 +17,7 @@ const autoBooking = async (req, res) => {
     for (const subgroups of sets) {
       const sortedSubgroups = [...subgroups].sort((a, b) => b - a);
       // const sortedSubgroups=subgroups;
-      const result = await allocateSubgroups(showId, userCenter, sortedSubgroups);
+      const result = await allocateSubgroups(showId, sortedSubgroups , userCenter);
       
       if (result.success) {
         allocation = { ...result, sortedSubgroups };

@@ -9,7 +9,7 @@ const salt = 8;
 const signUp = async (req, res) => {
   try {
     const reqBody = req.body;
-    console.log(reqBody);
+    // console.log(reqBody);
 
     const user = {
       fullName: reqBody.fullName,

@@ -1,7 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import WebSocket from "ws";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
@@ -66,7 +65,7 @@ app.use(
 
 async function init() {
   try {
-    const user = await userModel.findOne({ userID: "abhishek_55" });
+    const user = await userModel.findOne({ userID: process.env.ADMIN_USERID });
 
     if (user) {
       console.log("ADMIN IS ALREADY PRESENT ->", user.fullName);
@@ -79,8 +78,8 @@ async function init() {
   try {
     await userModel.create({
       fullName: "Abhishek Yadav",
-      userID: "abhishek_55",
-      password: bcrypt.hashSync("abhi123", salt),
+      userID: process.env.ADMIN_USERID,
+      password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, salt),
       email: "abhishek908489@gmail.com", 
       userType: "ADMIN",
     });
