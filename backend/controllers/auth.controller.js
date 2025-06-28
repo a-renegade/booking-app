@@ -107,7 +107,12 @@ const authCheck = async (req, res) => {
 const logout = async (req, res) => {
   console.log("Logout requested");
   try {
-    res.cookie("jwt", "", { maxAge: 0 });
+    res.cookie("jwt", "", {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "development" ? "Lax" : "None",
+      secure: process.env.NODE_ENV !== "development",
+      maxAge: 0,
+    });
     res.status(200).json({ message: "Logged out successfully" });
     console.log("Logged out successfully");
   } catch (error) {

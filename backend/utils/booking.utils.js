@@ -27,7 +27,7 @@ const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
   console.timeEnd("subgroupAllocationScript");
   const result = JSON.parse(luaResult);
   console.log(result);
-  displaySegmentData(showId);
+  await displaySegmentData(showId);
   
   if (!result.success) {
     return { success: false, failedSubgroup: result.failedSubgroup };
