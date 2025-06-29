@@ -33,7 +33,13 @@ const autoBooking = async (req, res) => {
     }
     
     const { lockId, seats } = allocation;
-
+    const io = getIO();
+    seats.forEach(seat => {
+      io.to(`show:${showId}`).emit("seatLocked", {
+        seat,
+        userID,
+      });
+    });
     const booking = await Booking.create({
       userReferenceId: req.user.userReferenceId,
       showId,
@@ -42,13 +48,7 @@ const autoBooking = async (req, res) => {
       paymentStatus: "pending",
     });
 
-    const io = getIO();
-    seats.forEach(seat => {
-      io.to(`show:${showId}`).emit("seatLocked", {
-        seat,
-        userID,
-      });
-    });
+    
     
     const bookingId=booking._id;
     

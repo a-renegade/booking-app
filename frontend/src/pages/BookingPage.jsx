@@ -27,7 +27,15 @@ const BookingPage = () => {
       );
       // toggleSeat(seat.row,seat.col);
     });
-
+    socket.on("seatLocked", ({ seat }) => {
+      console.log("Seat booked in room", seat);
+      setBookedSeats(prev => [...prev, seat]);
+      
+      setSelectedSeats(prev =>
+        prev.filter(s => !(s.row === seat.row && s.col === seat.col))
+      );
+      // toggleSeat(seat.row,seat.col);
+    });
 
     const fetchShow = async () => {
       try {
