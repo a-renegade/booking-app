@@ -13,7 +13,7 @@ function formatSeats(showId, seats) {
 const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
   const ttl = 30000;
   const lockId = uuidv4();
-  console.time("subgroupAllocationScript");
+  // console.time("subgroupAllocationScript");
   const luaResult = await redis.eval(subgroupAllocationScript, {
     keys: [],
     arguments: [
@@ -24,10 +24,10 @@ const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
       JSON.stringify(subgroups),
     ],  
   });
-  console.timeEnd("subgroupAllocationScript");
+  // console.timeEnd("subgroupAllocationScript");
   const result = JSON.parse(luaResult);
   console.log(result);
-  await displaySegmentData(showId);
+  // await displaySegmentData(showId);
   
   if (!result.success) {
     return { success: false, failedSubgroup: result.failedSubgroup };
