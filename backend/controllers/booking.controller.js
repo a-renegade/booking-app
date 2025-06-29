@@ -1,10 +1,10 @@
 import Booking from "../models/bookingModel.js";
-import Show from "../models/showModel.js";
-import { processSurveyData } from "./cacheControllers/surveyData.controller.js";
+// import Show from "../models/showModel.js";
+// import { processSurveyData } from "./cacheControllers/surveyData.controller.js";
 import { getIO } from "../socket/index.js";
 import { lockSeats, confirmBooking ,allocateSubgroups } from "../utils/booking.utils.js"
 import { displaySegmentData } from "../utils/cache.utils.js"
-import redis from "../lib/redis/redis.js";
+// import redis from "../lib/redis/redis.js";
 
 const autoBooking = async (req, res) => {
   try {
@@ -57,7 +57,7 @@ const autoBooking = async (req, res) => {
     if (!confirmed) {
       return res.status(400).json({ message: "Seat confirmation failed" });
     }
-    await displaySegmentData(showId);
+    // await displaySegmentData(showId);
     // console.log(allocation.seats);
     res.status(201).json({
       message: "Auto booking confirmed",
@@ -112,7 +112,7 @@ const createBooking = async (req, res) => {
 
     // processSurveyData({ showId, userID, seats });
 
-    await displaySegmentData(showId);
+    // await displaySegmentData(showId);
     const confirmedBooking = await confirmBooking(booking._id);
 
 
