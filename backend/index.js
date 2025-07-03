@@ -33,7 +33,7 @@ const startServer = async () => {
   // console.log(seatProbabilities);
   
   await generateSegmentsForAllShows();
-  // await displaySegmentData("685b0cdb8a50e8342f4d84d4") 
+  // await displaySegmentData("685bdaf608ff10bb19d0e0f4") 
   server.listen(serverPortNumber, () => {
     console.log("SERVER IS RUNNING AT PORT:", serverPortNumber);
   });

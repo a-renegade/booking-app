@@ -11,6 +11,8 @@ local ttl = tonumber(ARGV[2])
 local showId = ARGV[3]
 local userCenter = ARGV[4]
 local subgroups = cjson.decode(ARGV[5])
+local maxLength = tonumber(ARGV[6])
+
 
 local function parseSeat(seat)
   local row, col = string.match(seat, "([A-Z])%-(%d+)")
@@ -34,39 +36,49 @@ local seatRanges = {}
 local prefix = "segment:"
 
 for _, subgroupSize in ipairs(subgroups) do
-  local candidates = redis.call("ZRANGEBYSCORE", prefix .. "sorted-centers:" .. showId, subgroupSize, "+inf", "LIMIT", 0, 20)
-
   local bestSegment = nil
   local bestWindow = nil
   local bestDistance = nil
+  local bestLengthDiff = nil
 
-  for _, center in ipairs(candidates) do
-    local dataStr = redis.call("HGET", prefix .. "center-to-data:" .. showId, center)
-    if dataStr then
-      local ok, data = pcall(cjson.decode, dataStr)
-      if ok and data.start and data["end"] then
-        local row1, startCol = parseSeat(data.start)
-        local _, endCol = parseSeat(data["end"])
-        local length = endCol - startCol + 1
+  for tryLength = subgroupSize, maxLength do
+    local key = prefix .. "sorted-centers:" .. showId .. ":" .. tryLength
+    local result = redis.call("ZRANGE", key, 0, 0)  -- closest center by distance (score)
+    local center = result[1]
 
-        if length >= subgroupSize then
-          for i = startCol, endCol - subgroupSize + 1 do
-            local centerCol = i + math.floor((subgroupSize - 1) / 2)
-            local dist = manhattan(userRow, userCol, row1, centerCol)
-            if not bestDistance or dist < bestDistance then
-              bestDistance = dist
-              bestWindow = { row = row1, startCol = i, endCol = i + subgroupSize - 1 }
-              bestSegment = {
-                center = center,
-                data = data,
-                score = redis.call("ZSCORE", prefix .. "sorted-centers:" .. showId, center)
-              }
+    if center then
+      local dataStr = redis.call("HGET", prefix .. "center-to-data:" .. showId, center)
+      if dataStr then
+        local ok, data = pcall(cjson.decode, dataStr)
+        if ok and data.start and data["end"] then
+          local row1, startCol = parseSeat(data.start)
+          local _, endCol = parseSeat(data["end"])
+          local length = endCol - startCol + 1
+
+          if length >= subgroupSize then
+            for i = startCol, endCol - subgroupSize + 1 do
+              local centerCol = i + math.floor((subgroupSize - 1) / 2)
+              local dist = manhattan(userRow, userCol, row1, centerCol)
+              local lengthDiff = math.abs(tryLength - subgroupSize)
+
+              if (not bestLengthDiff or lengthDiff < bestLengthDiff) or
+                (lengthDiff == bestLengthDiff and dist < bestDistance) then
+                bestLengthDiff = lengthDiff
+                bestDistance = dist
+                bestWindow = { row = row1, startCol = i, endCol = i + subgroupSize - 1 }
+                bestSegment = {
+                  center = center,
+                  data = data,
+                  score = redis.call("ZSCORE", key, center)
+                }
+              end
             end
           end
         end
       end
     end
   end
+
 
   if not bestSegment then
     for _, s in ipairs(addedSegments) do

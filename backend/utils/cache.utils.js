@@ -75,34 +75,56 @@ export async function generateSegmentForShow(showId) {
 
   const rows = theater.layout.rows;
   const cols = theater.layout.columns;
-  const userCenter = "E-5"; // static center reference
+
+  
+  const centerRowChar = String.fromCharCode(65 + Math.floor(rows / 2));
+  const centerCol = Math.floor(cols / 2) + 1;
+  const userCenter = `${centerRowChar}-${centerCol}`;
 
   const seatToCenter = {};
   const centerToData = {};
-  const sortedCenters = [];
+  const lengthToSortedCenters = {}; // { 2: [{score, value}], 3: [...], ... }
 
   for (let r = 0; r < rows; r++) {
     const rowChar = String.fromCharCode(65 + r);
     const colsArray = Array.from({ length: cols }, (_, i) => i + 1);
     const segments = buildSegmentsForRow(rowChar, colsArray, userCenter, bookedSeats);
+
     for (const { center, segment, seats } of segments) {
+      const { length, distance } = segment;
+
       centerToData[center] = JSON.stringify(segment);
-      sortedCenters.push({ score: segment.length, value: center });
+      seatToCenter[seats[0]] = center;
+
       for (const seat of seats) {
         seatToCenter[seat] = center;
       }
+
+      if (!lengthToSortedCenters[length]) lengthToSortedCenters[length] = [];
+      lengthToSortedCenters[length].push({ score: distance, value: center });
     }
   }
 
-  
   const pipeline = redis.multi();
 
-  pipeline.del(
+  // Clear previous keys
+  const delKeys = [
     `segment:seat-to-center:${showId}`,
     `segment:center-to-data:${showId}`,
-    `segment:sorted-centers:${showId}`
-  );
+  ];
 
+  for (const length of Object.keys(lengthToSortedCenters)) {
+    delKeys.push(`segment:sorted-centers:${showId}:${length}`);
+  }
+  pipeline.del(...delKeys);
+
+  pipeline.hSet(`layout:${showId}`, {
+    rows,
+    cols
+  });
+
+  
+  // Write new data
   if (Object.keys(seatToCenter).length > 0) {
     pipeline.hSet(`segment:seat-to-center:${showId}`, seatToCenter);
   }
@@ -111,15 +133,15 @@ export async function generateSegmentForShow(showId) {
     pipeline.hSet(`segment:center-to-data:${showId}`, centerToData);
   }
 
-  if (Object.keys(sortedCenters).length > 0) {
-    pipeline.zAdd(`segment:sorted-centers:${showId}`, sortedCenters);
+  for (const [length, entries] of Object.entries(lengthToSortedCenters)) {
+    pipeline.zAdd(`segment:sorted-centers:${showId}:${length}`, entries);
   }
 
   await pipeline.exec();
 
   console.log(`✅ Segments cached for show ${showId}`);
-  // displaySegmentData(showId)
 }
+
  
 
 
@@ -127,52 +149,42 @@ export async function generateSegmentForShow(showId) {
 export async function displaySegmentData(showId) {
   const seatToCenterKey = `segment:seat-to-center:${showId}`;
   const centerToDataKey = `segment:center-to-data:${showId}`;
-  const sortedCentersKey = `segment:sorted-centers:${showId}`;
 
-  // Get segment data
-  const [seatToCenter, centerToData, sortedCenters] = await Promise.all([
+  const [seatToCenter, centerToData] = await Promise.all([
     redis.hGetAll(seatToCenterKey),
     redis.hGetAll(centerToDataKey),
-    redis.zRangeWithScores(sortedCentersKey, 0, -1),
   ]);
 
-  // Get all locked seat keys
-  const lockedSeatKeys = await redis.keys(`seat:lock:${showId}:*`);
-  const lockedSeats = lockedSeatKeys.map(key => key.split(":").pop());
+  const segmentZsetKeys = await redis.keys(`segment:sorted-centers:${showId}:*`);
+
+  const sortedCentersByLength = {};
+  for (const key of segmentZsetKeys) {
+    const length = key.split(":").pop();
+    sortedCentersByLength[length] = await redis.zRangeWithScores(key, 0, -1);
+  }
 
   console.log(`\n--- 🔍 Segment Data for Show ID: ${showId} ---\n`);
 
-  // 🔐 Locked seats
-  console.log("🔐 Locked Seats:");
-  if (lockedSeats.length === 0) {
-    console.log("  None");
-  } else {
-    for (const seat of lockedSeats) {
-      console.log(`  ${seat}`);
-    }
-  }
-
-  // 🟢 Seat to Center Mapping
   console.log("\n📌 segment:seat-to-center");
   for (const [seat, center] of Object.entries(seatToCenter)) {
     console.log(`  ${seat} → ${center}`);
   }
 
-  // 📦 Segment metadata
   console.log("\n📌 segment:center-to-data");
   for (const [center, json] of Object.entries(centerToData)) {
     const parsed = JSON.parse(json);
     console.log(`  ${center}:`, parsed);
   }
 
-  // 🔢 Sorted Centers
-  console.log("\n📌 segment:sorted-centers (ZSET)");
-  for (const entry of sortedCenters) {
-    console.log(`  ${entry.value} (length: ${entry.score})`);
+  for (const [length, entries] of Object.entries(sortedCentersByLength)) {
+    console.log(`\n📌 segment:sorted-centers (length=${length})`);
+    for (const entry of entries) {
+      console.log(`  ${entry.value} (distance: ${entry.score})`);
+    }
   }
 
   console.log("\n--- ✅ End of Segment Dump ---\n");
-} 
+}
 
 export async function getSegmentLengths(showId) {
   const key = `segment:sorted-centers:${showId}`;

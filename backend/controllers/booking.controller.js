@@ -4,14 +4,20 @@ import Booking from "../models/bookingModel.js";
 import { getIO } from "../socket/index.js";
 import { lockSeats, confirmBooking ,allocateSubgroups } from "../utils/booking.utils.js"
 import { displaySegmentData } from "../utils/cache.utils.js"
-// import redis from "../lib/redis/redis.js";
+import redis from "../lib/redis/redis.js";
 
 const autoBooking = async (req, res) => {
   try {
     const { userID } = req.user;
     const { showId, sets, allowSolo } = req.body;
+    const layout = await redis.hGetAll(`layout:${showId}`);
+    const rows = parseInt(layout.rows, 10);
+    const cols = parseInt(layout.cols, 10);
 
-    const userCenter = "E-5"; // default or computed center
+    const centerRowChar = String.fromCharCode(65 + Math.floor(rows / 2));
+    const centerCol = Math.floor(cols / 2) + 1;
+    const userCenter = `${centerRowChar}-${centerCol}`;
+
     let allocation = null;
 
     for (const subgroups of sets) {

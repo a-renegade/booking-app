@@ -32,7 +32,6 @@ local userCenterRow, userCenterCol = parseSeat(ARGV[4])
 local function splitSegment(showId, seat)
   local seatToCenterKey = "segment:seat-to-center:" .. showId
   local centerToDataKey = "segment:center-to-data:" .. showId
-  local sortedCentersKey = "segment:sorted-centers:" .. showId
 
   local center = redis.call("HGET", seatToCenterKey, seat)
   table.insert(log, "Splitting seat: " .. seat .. " center: " .. tostring(center))
@@ -44,17 +43,21 @@ local function splitSegment(showId, seat)
   local segment = cjson.decode(segmentJson)
   local startSeat = segment["start"]
   local endSeat = segment["end"]
+  local segmentLength = segment["length"]
+  local sortedCentersKey = "segment:sorted-centers:" .. showId .. ":" .. segmentLength
 
   local row, col = parseSeat(seat)
   local _, startCol = parseSeat(startSeat)
   local _, endCol = parseSeat(endSeat)
 
+  -- Delete original segment
   redis.call("HDEL", centerToDataKey, center)
   redis.call("ZREM", sortedCentersKey, center)
   for i = startCol, endCol do
     redis.call("HDEL", seatToCenterKey, row .. "-" .. i)
   end
 
+  -- Left segment (if any)
   if col > startCol then
     local newStart = startSeat
     local newEnd = row .. "-" .. (col - 1)
@@ -72,13 +75,15 @@ local function splitSegment(showId, seat)
 
     table.insert(log, "Created left segment: " .. cjson.encode(leftSegment))
 
+    local leftZsetKey = "segment:sorted-centers:" .. showId .. ":" .. newLen
     redis.call("HSET", centerToDataKey, newCenter, cjson.encode(leftSegment))
-    redis.call("ZADD", sortedCentersKey, newLen, newCenter)
+    redis.call("ZADD", leftZsetKey, newDistance, newCenter)
     for i = startCol, col - 1 do
       redis.call("HSET", seatToCenterKey, row .. "-" .. i, newCenter)
     end
   end
 
+  -- Right segment (if any)
   if col < endCol then
     local newStart = row .. "-" .. (col + 1)
     local newEnd = endSeat
@@ -96,8 +101,9 @@ local function splitSegment(showId, seat)
 
     table.insert(log, "Created right segment: " .. cjson.encode(rightSegment))
 
+    local rightZsetKey = "segment:sorted-centers:" .. showId .. ":" .. newLen
     redis.call("HSET", centerToDataKey, newCenter, cjson.encode(rightSegment))
-    redis.call("ZADD", sortedCentersKey, newLen, newCenter)
+    redis.call("ZADD", rightZsetKey, newDistance, newCenter)
     for i = col + 1, endCol do
       redis.call("HSET", seatToCenterKey, row .. "-" .. i, newCenter)
     end
@@ -112,5 +118,6 @@ for i = 1, #KEYS do
   table.insert(log, "Locked seat: " .. seat)
   splitSegment(ARGV[3], seat)
 end
+
 return 1
 -- return cjson.encode(log)

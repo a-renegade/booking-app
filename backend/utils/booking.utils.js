@@ -6,6 +6,7 @@ import Show from "../models/showModel.js";
 import { getIO } from "../socket/index.js";
 import { processSurveyData } from "../controllers/cacheControllers/surveyData.controller.js";
 import { displaySegmentData } from "./cache.utils.js"
+import { allocateSubgroupsBackend } from "../services/booking.service.js";
 function formatSeats(showId, seats) {
   return seats.map(seat => `${seat.row}-${seat.col}`);
 }
@@ -13,21 +14,22 @@ function formatSeats(showId, seats) {
 const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
   const ttl = 30000;
   const lockId = uuidv4();
-  // console.time("subgroupAllocationScript");
-  const luaResult = await redis.eval(subgroupAllocationScript, {
-    keys: [],
-    arguments: [
-      lockId,
-      ttl.toString(),
-      showId,
-      theaterCenter,
-      JSON.stringify(subgroups),
-    ],  
-  });
-  // console.timeEnd("subgroupAllocationScript");
-  const result = JSON.parse(luaResult);
-  console.log(result);
-  // await displaySegmentData(showId);
+  console.time("subgroupAllocation");
+  const result = await allocateSubgroupsBackend(showId, theaterCenter, subgroups)
+  // const luaResult = await redis.eval(subgroupAllocationScript, {
+  //   keys: [],
+  //   arguments: [
+  //     lockId,
+  //     ttl.toString(),
+  //     showId,
+  //     theaterCenter,
+  //     JSON.stringify(subgroups),
+  //   ],  
+  // });
+  console.timeEnd("subgroupAllocation");
+  // const result = JSON.parse(luaResult);
+  // console.log(result);
+  await displaySegmentData(showId);
   
   if (!result.success) {
     return { success: false, failedSubgroup: result.failedSubgroup };
