@@ -9,7 +9,7 @@ const allocateSubgroupsBackend = async ( showId, userCenter, subgroups, maxLengt
   function makeSeat(row, col) {
     return `${row}-${col}`;
   }
-
+  
   function manhattan(row1, col1, row2, col2) {
     return Math.abs(row1.charCodeAt(0) - row2.charCodeAt(0)) + Math.abs(col1 - col2);
   }
@@ -18,7 +18,7 @@ const allocateSubgroupsBackend = async ( showId, userCenter, subgroups, maxLengt
   const addedSegments = [];
   const deletedSegments = [];
   const seatRanges = [];
-
+  
   for (const subgroupSize of subgroups) {
     let bestSegment = null;
     let bestWindow = null;
