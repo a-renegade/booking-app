@@ -15,7 +15,7 @@ const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
   const ttl = 30000;
   const lockId = uuidv4();
   console.time("subgroupAllocation");
-  const result = await allocateSubgroupsBackend(showId, theaterCenter, subgroups)
+  const result = await allocateSubgroupsBackend(showId, theaterCenter, subgroups) 
   // const luaResult = await redis.eval(subgroupAllocationScript, {
   //   keys: [],
   //   arguments: [
@@ -29,7 +29,8 @@ const allocateSubgroups = async (showId, subgroups, theaterCenter = "E-5") => {
   console.timeEnd("subgroupAllocation");
   // const result = JSON.parse(luaResult);
   // console.log(result);
-  await displaySegmentData(showId);
+  console.log(result)
+  // await displaySegmentData(showId);
   
   if (!result.success) {
     return { success: false, failedSubgroup: result.failedSubgroup };

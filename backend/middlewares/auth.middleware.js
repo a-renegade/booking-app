@@ -95,7 +95,7 @@ const authCheck = (req, res, next) => {
     req.user.userType = tokenDetails.userType;
     req.user.userReferenceId = tokenDetails.userReferenceId;
 
-    next();
+    next(); 
   } catch (err) {
     console.log("Not a valid token for authCheck request:", err.message);
     return res.status(401).json({ message: "Invalid or expired token" });
