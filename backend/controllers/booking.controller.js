@@ -11,7 +11,7 @@ const autoBooking = async (req, res) => {
     const { userID } = req.user;
     const { showId, sets, allowSolo } = req.body;
 
-    const userCenter = "E-5"; // default or computed center
+    const userCenter = "E-6"; // default or computed center
     let allocation = null;
 
     for (const subgroups of sets) {
