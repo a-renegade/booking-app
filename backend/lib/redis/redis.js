@@ -8,14 +8,16 @@ async function initRedis() {
     redisClient = createClient({
       url: process.env.REDIS_URL,
       socket: {
+        tls: true,
+        rejectUnauthorized: false,
         connectTimeout: 10000,
-        reconnectStrategy: (retries) => Math.min(retries * 100, 3000), // backoff
+        reconnectStrategy: (retries) => Math.min(retries * 100, 3000),
       },
     });
 
     redisClient.on("error", (err) => {
       console.error("❌ Redis error:", err);
-    }); 
+    });
 
     redisClient.on("connect", () => {
       console.log("✅ Redis connected");
@@ -30,4 +32,4 @@ async function initRedis() {
   return redisClient;
 }
 
-export default await initRedis(); // top-level await allowed in ES modules
+export default await initRedis();
