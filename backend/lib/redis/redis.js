@@ -7,12 +7,12 @@ async function initRedis() {
   if (!redisClient) {
     redisClient = createClient({
       url: process.env.REDIS_URL,
-      socket: {
-        tls: true,
-        rejectUnauthorized: false,
-        connectTimeout: 10000,
-        reconnectStrategy: (retries) => Math.min(retries * 100, 3000),
-      },
+      socket: process.env.REDIS_URL.startsWith("rediss://")
+        ? {
+            tls: true,
+            rejectUnauthorized: false,
+          }
+        : {},
     });
 
     redisClient.on("error", (err) => {
