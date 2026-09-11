@@ -12,11 +12,8 @@ import showRoutes from "./routes/show.routes.js";
 import theaterRoutes from "./routes/theater.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import seatRoutes from "./routes/seat.routes.js";
-import { getAllSurveyData } from "./controllers/cacheControllers/surveyData.controller.js";
-import { fitAndCacheSurveyCurve } from "./utils/probabilities.utils.js";
 import { setupSocket } from "./socket/index.js";
 import { generateSegmentsForAllShows, displaySegmentData } from "./utils/cache.utils.js"
-import "./cron/surveyCron.js";
 import "dotenv/config";
 const app = express();
 const salt = 8;
@@ -91,7 +88,7 @@ async function init() {
   }
 }
 
-app.get("/bookingApp/api/survey", getAllSurveyData);
+// app.get("/bookingApp/api/survey", getAllSurveyData);
 app.use("/bookingApp/api/auth", authRoutes);
 app.use("/bookingApp/api/movie", movieRoutes);
 app.use("/bookingApp/api/show", showRoutes);

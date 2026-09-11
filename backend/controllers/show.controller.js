@@ -1,6 +1,4 @@
 import Show from "../models/showModel.js";
-import { fetchSelectedSeatsByUser , fetchSeatSelectionCounts } from "./cacheControllers/seat.controller.js";
-import { getCachedSurveyCurve } from "../utils/probabilities.utils.js"
 import { generateSegmentForShow } from "../utils/cache.utils.js"
 async function convertBookedSeatsMapToArray(bookedSeatsMap) {
   const seats = [];
@@ -88,14 +86,9 @@ const getShowById = async (req, res) => {
       return res.status(404).json({ message: "Show not found" });
     }
 
-    const selectedSeats = await fetchSelectedSeatsByUser(id, req.user.userID);
-    const probabilities= await getCachedSurveyCurve();
-    const seatSelectionCount=await fetchSeatSelectionCounts(id);
+    
     
     const showData = show.toObject();
-    showData.selectedSeats=selectedSeats;
-    showData.probabilities=probabilities;
-    showData.seatSelectionCount=seatSelectionCount;
     showData.bookedSeats=await convertBookedSeatsMapToArray(show.bookedSeats);
 
     res.status(200).json(showData);

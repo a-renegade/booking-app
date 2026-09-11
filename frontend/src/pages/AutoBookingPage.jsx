@@ -92,7 +92,7 @@ export default function AutoBookingPage() {
       }
     };
 
-    fetchSegmentInfo();
+    // fetchSegmentInfo();
   }, [showId]);
 
   return (

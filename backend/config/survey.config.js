@@ -74,4 +74,4 @@ const sampleData = {
 //   addSurveyData( count ,booked , notBooked);
 // } 
  
-export { surveyWindowDays, maxUsers , sampleData };
+// export { surveyWindowDays, maxUsers , sampleData };

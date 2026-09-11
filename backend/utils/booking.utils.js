@@ -4,7 +4,6 @@ import { lockAndSplitSeatsScript , subgroupAllocationScript } from '../lib/redis
 import Booking from "../models/bookingModel.js";
 import Show from "../models/showModel.js";
 import { getIO } from "../socket/index.js";
-import { processSurveyData } from "../controllers/cacheControllers/surveyData.controller.js";
 import { displaySegmentData } from "./cache.utils.js"
 import { allocateSubgroupsBackend } from "../services/booking.service.js";
 function formatSeats(showId, seats) {
@@ -161,7 +160,6 @@ const confirmBooking = async (bookingId) => {
     }
 
     // Trigger survey logic
-    processSurveyData({ showId, userID, seats });
 
     return true;
   } catch (err) {

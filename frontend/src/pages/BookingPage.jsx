@@ -4,51 +4,46 @@ import { axiosInstance } from "../lib/axios";
 import Seat from "../components/Seat";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+
 const BookingPage = () => {
-  
   const { showId } = useParams();
+
   const [layout, setLayout] = useState({ rows: 0, columns: 0 });
   const [bookedSeats, setBookedSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [probabilities, setProbabilities] = useState([]);
-  const [seatSelectionCount, setseatSelectionCount] = useState([]);
-  
+
   useEffect(() => {
     const socket = io(import.meta.env.VITE_SOCKET_URL);
+
     socket.emit("joinShowRoom", showId);
 
     socket.on("seatBooked", ({ seat }) => {
-      console.log("Seat booked in room", seat);
       setBookedSeats(prev => [...prev, seat]);
-      
+
       setSelectedSeats(prev =>
-        prev.filter(s => !(s.row === seat.row && s.col === seat.col))
+        prev.filter(
+          s => !(s.row === seat.row && s.col === seat.col)
+        )
       );
-      // toggleSeat(seat.row,seat.col);
     });
+
     socket.on("seatLocked", ({ seat }) => {
-      console.log("Seat booked in room", seat);
       setBookedSeats(prev => [...prev, seat]);
-      
+
       setSelectedSeats(prev =>
-        prev.filter(s => !(s.row === seat.row && s.col === seat.col))
+        prev.filter(
+          s => !(s.row === seat.row && s.col === seat.col)
+        )
       );
-      // toggleSeat(seat.row,seat.col);
     });
 
     const fetchShow = async () => {
       try {
         const res = await axiosInstance.get(`/show/${showId}`);
-        
-        // console.log(res.data.probabilities);
-        // console.log(res.data.seatSelectionCount);
-        
+
         setLayout(res.data.theaterId.layout);
         setBookedSeats(res.data.bookedSeats);
-        setSelectedSeats(res.data.selectedSeats);
-        setProbabilities(res.data.probabilities);
-        setseatSelectionCount(res.data.seatSelectionCount);
       } catch (err) {
         console.error("Error fetching show:", err);
         toast.error("Failed to load show data");
@@ -56,42 +51,66 @@ const BookingPage = () => {
         setLoading(false);
       }
     };
+
     fetchShow();
-    return ()=>{
+
+    return () => {
       socket.disconnect();
-    }
+    };
   }, [showId]);
 
   const isBooked = (row, col) =>
-    bookedSeats.some(seat => seat.row === row && seat.col === col);
+    bookedSeats.some(
+      seat => seat.row === row && seat.col === col
+    );
 
   const isSelected = (row, col) =>
-    selectedSeats.some(seat => seat.row === row && seat.col === col);
+    selectedSeats.some(
+      seat => seat.row === row && seat.col === col
+    );
 
-const toggleSeat = (row, col) => {
-  if (isBooked(row, col)) return;
+  const toggleSeat = (row, col) => {
+    if (isBooked(row, col)) return;
 
-  const exists = selectedSeats.find(seat => seat.row === row && seat.col === col);
+    const exists = selectedSeats.find(
+      seat => seat.row === row && seat.col === col
+    );
 
-  if (exists) {
-    setSelectedSeats(prev => prev.filter(seat => seat.row !== row || seat.col !== col));
-    // toast.success("Seat deselected");
+    if (exists) {
+      setSelectedSeats(prev =>
+        prev.filter(
+          seat => seat.row !== row || seat.col !== col
+        )
+      );
 
-    axiosInstance.post(`/seat/deselect`, { showId, row, col }).catch(err => {
-      console.error("Background deselect error:", err);
-      toast.error("Failed to deselect seat");
-    });
-  } else {
-    setSelectedSeats(prev => [...prev, { row, col ,}]);
-    // toast.success("Seat selected");
+      // axiosInstance
+      //   .post("/seat/deselect", {
+      //     showId,
+      //     row,
+      //     col
+      //   })
+      //   .catch(err => {
+      //     console.error("Background deselect error:", err);
+      //     toast.error("Failed to deselect seat");
+      //   });
+    } else {
+      setSelectedSeats(prev => [
+        ...prev,
+        { row, col }
+      ]);
 
-    axiosInstance.post(`/seat/select`, { showId, row, col }).catch(err => {
-      console.error("Background select error:", err);
-      toast.error("Failed to select seat");
-    });
-  }
-};
-
+      // axiosInstance
+      //   .post("/seat/select", {
+      //     showId,
+      //     row,
+      //     col
+      //   })
+      //   .catch(err => {
+      //     console.error("Background select error:", err);
+      //     toast.error("Failed to select seat");
+      //   });
+    }
+  };
 
   const handleBooking = async () => {
     if (selectedSeats.length === 0) {
@@ -99,58 +118,89 @@ const toggleSeat = (row, col) => {
     }
 
     try {
-      const res = await axiosInstance.post(
+      await axiosInstance.post(
         "/booking",
         {
-          
           showId,
           seats: selectedSeats,
-          paymentStatus:"confirmed",
+          paymentStatus: "confirmed"
         },
-        
-        { withCredentials: true } // to send the JWT cookie
+        {
+          withCredentials: true
+        }
       );
+
       toast.success("Booking successful!");
-      setSelectedSeats([]); // reset after booking
-      setBookedSeats(prev => [...prev, ...selectedSeats]);
+
+      setBookedSeats(prev => [
+        ...prev,
+        ...selectedSeats
+      ]);
+
+      setSelectedSeats([]);
     } catch (err) {
       console.error("Booking error:", err);
-      toast.error(err.response.data.message);
+      toast.error(
+        err.response?.data?.message || "Booking failed"
+      );
     }
   };
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+
+  if (loading) {
+    return (
+      <p className="text-center mt-10">
+        Loading...
+      </p>
+    );
+  }
 
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const getProbability = (row, col) => {
-    const key = `${row}-${col}`;
-    const count = seatSelectionCount[key] || 0;
-    const max = 10; // maximum observed selection count
-    const cnt=Math.min(count, max); // clamp to 1
-    return probabilities[cnt];
-  };
+
   return (
     <div className="p-6 pt-6">
-      <h2 className="flex justify-center text-xl font-semibold mb-4">Select Your Seats</h2>
+      <h2 className="flex justify-center text-xl font-semibold mb-4">
+        Select Your Seats
+      </h2>
+
       <div className="flex flex-col gap-2 items-center">
-        {Array.from({ length: layout.rows }, (_, i) => {
-          const rowLabel = alphabet[i];
-          return (
-            <div key={rowLabel} className="flex gap-2">
-              {Array.from({ length: layout.columns }, (_, j) => (
-                //how can i write js code here
-                <Seat
-                  key={`${rowLabel}-${j + 1}`}
-                  row={rowLabel}
-                  col={j + 1}
-                  isBooked={isBooked(rowLabel, j + 1)}
-                  isSelected={isSelected(rowLabel, j + 1)}
-                  onClick={() => toggleSeat(rowLabel, j + 1)}
-                  probability={getProbability(rowLabel, j + 1)} 
-                />
-              ))}
-            </div>
-          );
-        })}
+        {Array.from(
+          { length: layout.rows },
+          (_, i) => {
+            const rowLabel = alphabet[i];
+
+            return (
+              <div
+                key={rowLabel}
+                className="flex gap-2"
+              >
+                {Array.from(
+                  { length: layout.columns },
+                  (_, j) => (
+                    <Seat
+                      key={`${rowLabel}-${j + 1}`}
+                      row={rowLabel}
+                      col={j + 1}
+                      isBooked={isBooked(
+                        rowLabel,
+                        j + 1
+                      )}
+                      isSelected={isSelected(
+                        rowLabel,
+                        j + 1
+                      )}
+                      onClick={() =>
+                        toggleSeat(
+                          rowLabel,
+                          j + 1
+                        )
+                      }
+                    />
+                  )
+                )}
+              </div>
+            );
+          }
+        )}
       </div>
 
       <div className="flex flex-col items-center">
@@ -160,6 +210,7 @@ const toggleSeat = (row, col) => {
         >
           Book Now
         </button>
+
         <Link
           to={`/shows/${showId}/book/auto`}
           className="mt-2 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
